@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forest-loss review workbench</title>
+<style>
+:root{--bg:#f6f5f1;--panel:#fff;--ink:#1d2320;--mute:#5b655f;--line:#dcdad2;--accent:#1f6f4a;--warn:#9a5b00;--warnbg:#fff4de;--bad:#a12b2b;
+--base:#cfe3f5;--s1:#f7e3b5;--s2:#e8d3f0;--hand:#1f6f4a;--rule:#a12b2b;--pt:#2c4a6e}
+@media (prefers-color-scheme:dark){:root{--bg:#161a18;--panel:#1f2522;--ink:#e8ece9;--mute:#9aa6a0;--line:#34403a;--accent:#59c28f;--warn:#f0b45a;--warnbg:#33290f;--bad:#ef8a8a;
+--base:#24415a;--s1:#5a4a1d;--s2:#46305a;--hand:#59c28f;--rule:#ef8a8a;--pt:#9cc0ea}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}
+header .sp{flex:1}
+.banner{font-size:13px;color:var(--mute);padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+main{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 100px)}
+@media (max-width:900px){main{grid-template-columns:1fr}#list{max-height:40vh}}
+#side{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+#filters{padding:10px 12px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+input[type=search],select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#list{overflow:auto;flex:1}
+.row{display:flex;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;color:inherit;font:inherit}
+.row:hover{background:var(--bg)}.row[aria-current=true]{background:var(--bg);box-shadow:inset 3px 0 0 var(--accent)}
+.row .id{font-weight:600;min-width:74px;flex-shrink:0}.row .meta{color:var(--mute);font-size:13px;flex:1}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mute)}.dot.done{background:var(--accent);border-color:var(--accent)}
+.badge{font-size:12px;border-radius:4px;padding:1px 6px;border:1px solid var(--line);white-space:nowrap}
+.badge.warn{color:var(--warn);border-color:var(--warn)}
+#detail{padding:16px;display:grid;gap:14px;align-content:start;max-width:1100px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h2{font-size:14px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+.title{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.title h2{font-size:20px;margin:0;text-transform:none;letter-spacing:0;color:var(--ink)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.round{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:8px 0;border-top:1px solid var(--line)}.round:first-of-type{border-top:0}
+.round .k{color:var(--mute);font-size:13px}.big{font-size:17px;font-weight:600}
+.notice{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:8px 10px;font-size:14px}
+.notice+.notice{margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+button.act{padding:8px 14px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);font:inherit;cursor:pointer}
+button.act.primary{background:var(--accent);color:#fff}button.act[aria-pressed=true]{background:var(--accent);color:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+svg text{fill:var(--mute);font-size:11px;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}svg{max-width:100%;height:auto}
+details summary{cursor:pointer;color:var(--mute)}
+.small{font-size:13px;color:var(--mute)}
+details.howto{padding:6px 16px;border-bottom:1px solid var(--line)}details.howto summary{cursor:pointer;font-size:13px}details.howto ol{margin:6px 0 8px 18px}
+label.tog{font-size:13px;color:var(--mute);display:flex;gap:6px;align-items:center}
+/*LEAFLET_CSS*/
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media (max-width:760px){.ba{grid-template-columns:1fr}}.ba .mp{height:300px;border-radius:6px;border:1px solid var(--line)}.ba .lab{font-size:13px;font-weight:600;margin:0 0 4px}
+#map{height:340px;border-radius:6px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Forest-loss review workbench</h1>
+  <span class="small">Research prototype · four Sri Lankan protected-forest sites · loss years 2019–2024</span>
+  <span class="small" id="stamp"></span>
+  <span class="sp"></span>
+  <label class="tog"><input type="checkbox" id="tglKey"> Show reference labels (for evaluators, not for testers)</label>
+  <button class="act" id="btnExport">Export my reviews (CSV)</button>
+</header>
+<div class="banner">The tool suggests a driver for each loss event from satellite evidence. A suggestion is a probability-based attribution, not a legal or enforcement finding. The analysis is retrospective, not real time.</div>
+<details class="howto"><summary>How to use this page</summary><ol class="small">
+<li>Pick an event on the left. Use the filters to narrow the list (by call, thin evidence, review state or site).</li>
+<li>Read the tool's call, then the chart. Each dot is one clear satellite observation. The shaded bands are the only windows the call may use.</li>
+<li>Check the dates against the chart. If a patch carries a "rule-dated" notice, a program guessed the dates and nobody has checked them.</li>
+<li>Use "Open in Google Maps (satellite)" to look at the ground. That imagery is not from the event date, so use it for context only.</li>
+<li>Record your own view: agree, override or uncertain, with a note. Then save. "Export my reviews" downloads your answers as a CSV.</li>
+<li>Remember: a call is a probability-based suggestion, not a finding about who cleared the forest.</li></ol></details>
+<main>
+  <aside id="side">
+    <div id="filters">
+      <input type="search" id="q" placeholder="Search id or site" aria-label="Search id or site">
+      <div class="chips" id="chipsStatus" role="group" aria-label="Show">
+        <button class="chip" data-f="all" aria-pressed="true">All</button>
+        <button class="chip" data-f="evaluated" aria-pressed="false">Evaluated</button>
+        <button class="chip" data-f="fresh" aria-pressed="false">Not evaluated</button>
+        <button class="chip" data-f="nocall" aria-pressed="false">No call</button>
+      </div>
+      <div class="chips" id="chipsRev" role="group" aria-label="Review state">
+        <button class="chip" data-r="all" aria-pressed="true">Any review state</button>
+        <button class="chip" data-r="todo" aria-pressed="false">Not reviewed</button>
+        <button class="chip" data-r="done" aria-pressed="false">Reviewed</button>
+      </div>
+      <div class="chips" id="chipsCall" role="group" aria-label="Call">
+        <button class="chip" data-c="all" aria-pressed="true">Any call</button>
+        <button class="chip" data-c="cult" aria-pressed="false">Leans cultivation</button>
+        <button class="chip" data-c="perm" aria-pressed="false">Leans permanent</button>
+        <button class="chip" data-c="thin" aria-pressed="false">Thin evidence</button>
+        <button class="chip" data-c="rule" aria-pressed="false">Rule-dated</button>
+      </div>
+      <select id="siteSel" aria-label="Site"><option value="">All sites</option><option>Maduroad</option><option>Kahalla - Pallekele</option><option>Nuwaragala</option><option>Victoria Randenigala Rantambe</option></select>
+      <div class="small" id="count"></div>
+    </div>
+    <div id="list" role="list"></div>
+  </aside>
+  <section id="detail" aria-live="polite"></section>
+</main>
+<script>/*LEAFLET_JS*/</script>
+<script>/*DATA*/</script>
+<script>
+(function(){
+'use strict';
+var D = window.WB_DATA, EV = D.events, META = D.meta;
+var state = {sel:null, f:'all', r:'all', c:'all', q:'', key:false, site:''};
+var reviews = {};
+var LS = 'wb_reviews_v1';
+try { var raw = localStorage.getItem(LS); if (raw) reviews = JSON.parse(raw) || {}; } catch(e){}
+function saveLS(){ try { localStorage.setItem(LS, JSON.stringify(reviews)); } catch(e){} }
+
+var SHORT = {'Victoria Randenigala Rantambe':'Victoria','Kahalla - Pallekele':'Kahalla'};
+function ss(x){ return SHORT[x]||x; }
+var NAME = {candidate_human:'Human-driven (candidate)', candidate_natural:'Natural (candidate)',
+  cultivation:'Cultivation', permanent_encroachment:'Permanent encroachment'};
+function nm(x){ return NAME[x] || x; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function fmt(x,d){ return (x==null||isNaN(x))?'–':Number(x).toFixed(d==null?2:d); }
+function day(s){ return new Date(s+'T00:00:00Z').getTime()/86400000; }
+
+function hasCall(e){ return !!(e.call && e.call.stage1); }
+function tagOf(e){
+  if (e.status==='evaluated') return {t:'evaluated', n:'Evaluated event'};
+  if (e.status==='evaluated_no_dates') return {t:'no call', n:'In the labelled set, but no usable date'};
+  if (e.status==='maduroad_new' && e.rule_dated) return {t:'rule-dated, not screened', n:'Dates set by the automatic rule, not screened'};
+  if (e.status==='maduroad_new') return {t:(e.screening==='screened_not_confirmed'?'screened, not confirmed':'not screened'),
+    n:(e.screening==='screened_not_confirmed'?'Screened earlier and not confirmed as real forest loss':'Not screened')};
+  return {t:'not evaluated', n:'Model output, not evaluated'};
+}
+function pending(e){ return e.hand && e.hand.status==='dated' && !e.call; }
+
+function filtered(){
+  return EV.filter(function(e){
+    if (state.f==='evaluated' && e.status!=='evaluated') return false;
+    if (state.f==='fresh' && e.status!=='fresh') return false;
+    if (state.f==='nocall' && hasCall(e)) return false;
+    if (state.c==='cult' && !(e.call && e.call.stage2 && e.call.stage2.label==='cultivation')) return false;
+    if (state.c==='perm' && !(e.call && e.call.stage2 && e.call.stage2.label==='permanent_encroachment')) return false;
+    if (state.c==='thin' && !(e.features && thin(e).length)) return false;
+    if (state.c==='rule' && !e.rule_dated) return false;
+    if (state.site && e.site!==state.site) return false;
+    var done = !!reviews[e.id];
+    if (state.r==='todo' && done) return false;
+    if (state.r==='done' && !done) return false;
+    if (state.q){ var q=state.q.toLowerCase(); if ((e.id+' '+e.site).toLowerCase().indexOf(q)<0) return false; }
+    return true;
+  });
+}
+function badgeFor(e){
+  if (hasCall(e)){
+    var c=e.call;
+    var s = c.stage2 ? nm(c.stage2.label) : nm(c.stage1.label);
+    return '<span class="badge">'+esc(s)+'</span>'+(e.rule_dated?' <span class="badge warn" title="Dates set by the automatic rule, not checked">rule-dated</span>':'');
+  }
+  if (pending(e)) return '<span class="badge warn">features pending</span>';
+  if (e.status==='maduroad_new') return '<span class="badge warn">'+(e.screening==='screened_not_confirmed'?'not confirmed':'not screened')+'</span>';
+  return '<span class="badge warn">no call</span>';
+}
+function renderList(){
+  var L = filtered(), el = document.getElementById('list');
+  document.getElementById('count').textContent = L.length+' of '+EV.length+' events';
+  el.innerHTML = L.map(function(e){
+    return '<button class="row" role="listitem" data-id="'+e.id+'" aria-current="'+(state.sel===e.id)+'">'+
+      '<span class="dot '+(reviews[e.id]?'done':'')+'" title="'+(reviews[e.id]?'Reviewed':'Not reviewed')+'"></span>'+
+      '<span class="id">'+e.id+'</span><span class="meta">'+esc(ss(e.site))+' · '+e.hansen_year+'</span>'+badgeFor(e)+'</button>';
+  }).join('') || '<div class="card small" style="margin:12px">No events match.</div>';
+}
+
+/* ---------- chart ---------- */
+function chart(e){
+  var W=760,H=300,L=44,R=12,T=14,B=44;
+  var ser=e.series.map(function(p){return [day(p[0]),p[1]];});
+  if (!ser.length) return '<p class="small">No clear observations.</p>';
+  var x0,x1;
+  if (e.windows){ x0=day(e.windows.baseline[0])-20; x1=day(e.windows.s2[1])+20; }
+  else { x0=ser[0][0]; x1=ser[ser.length-1][0]; }
+  x0=Math.max(x0,ser[0][0]-5); x1=Math.min(x1,ser[ser.length-1][0]+5);
+  var y0=-0.3,y1=0.9;
+  function X(d){return L+(d-x0)/(x1-x0)*(W-L-R);} function Y(v){v=Math.max(y0,Math.min(y1,v));return T+(y1-v)/(y1-y0)*(H-T-B);}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="NBR trajectory for '+e.id+'">';
+  var labels='';
+  function band(a,b,cls,label,row){
+    var xa=X(Math.max(day(a),x0)), xb=X(Math.min(day(b),x1)); if (xb<=xa) return '';
+    labels+='<text x="'+(xa+3)+'" y="'+(T+11+row*12)+'">'+label+'</text>';
+    return '<rect x="'+xa+'" y="'+T+'" width="'+(xb-xa)+'" height="'+(H-T-B)+'" fill="var(--'+cls+')" opacity=".55"/>';
+  }
+  if (e.windows){
+    s+=band(e.windows.s2[0],e.windows.s2[1],'s2','Stage 2 window (12 months)',1);
+    s+=band(e.windows.s1[0],e.windows.s1[1],'s1','Stage 1 (60 d)',2);
+    s+=band(e.windows.baseline[0],e.windows.baseline[1],'base','Baseline (12 months before last forest date)',0);
+  }
+  s+=labels;
+  // axes
+  for (var v=-0.2; v<=0.8; v+=0.2){ s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="4" y="'+(Y(v)+4)+'">'+v.toFixed(1)+'</text>'; }
+  var yr0=new Date(x0*86400000).getUTCFullYear(), yr1=new Date(x1*86400000).getUTCFullYear();
+  var span=x1-x0, step = span>1500?12:(span>700?6:(span>400?3:1));
+  for (var yy=yr0; yy<=yr1+1; yy++) for (var m=0;m<12;m+=step){
+    var d=Date.UTC(yy,m,1)/86400000; if (d<x0||d>x1) continue;
+    s+='<line x1="'+X(d)+'" x2="'+X(d)+'" y1="'+(H-B)+'" y2="'+(H-B+4)+'" stroke="var(--mute)"/><text x="'+(X(d)-18)+'" y="'+(H-B+16)+'">'+yy+'-'+String(m+1).padStart(2,'0')+'</text>';
+  }
+  // hansen year
+  var hs=Date.UTC(e.hansen_year,0,1)/86400000, he=Date.UTC(e.hansen_year,11,31)/86400000;
+  if (he>x0 && hs<x1){ var xa=X(Math.max(hs,x0)), xb=X(Math.min(he,x1));
+    s+='<rect x="'+xa+'" y="'+(H-B+22)+'" width="'+(xb-xa)+'" height="5" fill="var(--mute)" opacity=".5"/><text x="'+(xa>W-200?W-R:xa)+'" y="'+(H-B+38)+'"'+(xa>W-200?' text-anchor="end"':'')+'>Hansen loss year '+e.hansen_year+' (hint only)</text>'; }
+  // intervals
+  function iv(a,b,cls,label,y,dash){
+    var da=day(a), db=day(b); if (db<x0||da>x1) return '';
+    return '<rect x="'+X(da)+'" y="'+y+'" width="'+Math.max(3,X(db)-X(da))+'" height="6" fill="var(--'+cls+')"'+(dash?' opacity=".6"':'')+'/>'+
+      (X(db)>W-190?'<text x="'+(X(da)-5)+'" y="'+(y+7)+'" text-anchor="end" style="fill:var(--'+cls+')">'+label+'</text>':'<text x="'+(X(db)+5)+'" y="'+(y+7)+'" style="fill:var(--'+cls+')">'+label+'</text>');
+  }
+  if (e.hand && e.hand.status==='dated') s+=iv(e.hand.t_forest,e.hand.t_loss,'hand','date interval used for the call',H-B-12);
+  if (e.rule && e.rule.t_loss) s+=iv(e.rule.t_forest||e.rule.t_loss,e.rule.t_loss,'rule','rule\'s guess (unverified)',H-B-24,true);
+  // line + points
+  var path=ser.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join(' ');
+  s+='<path d="'+path+'" fill="none" stroke="var(--pt)" stroke-width="1" opacity=".55"/>';
+  ser.forEach(function(p){ s+='<circle cx="'+X(p[0]).toFixed(1)+'" cy="'+Y(p[1]).toFixed(1)+'" r="2.5" fill="var(--pt)"/>'; });
+  s+='<text x="4" y="10">NBR</text></svg>';
+  return s;
+}
+
+/* ---------- map ---------- */
+var mapObj=null, baMaps=[], BA_MIN=2016, BA_MAX=2024;   // yearly mosaic range is UNVERIFIED
+function baYears(e){
+  var y=null, approx=false;
+  if (e.hand && e.hand.status==='dated' && e.hand.t_loss){ y=parseInt(e.hand.t_loss.slice(0,4),10); }
+  else if (e.rule && e.rule.t_loss){ y=parseInt(e.rule.t_loss.slice(0,4),10); approx=true; }
+  else { y=e.hansen_year; approx=true; }
+  if (e.rule_dated) approx=true;
+  var b=y-1, a=y+1, clamp=false;
+  if (b<BA_MIN){b=BA_MIN;clamp=true;} if (a>BA_MAX){a=BA_MAX;clamp=true;} if (b>BA_MAX){b=BA_MAX;clamp=true;}
+  return {b:b,a:a,y:y,approx:approx,clamp:clamp};
+}
+function baCard(e){
+  if (!e.geometry) return '';
+  var Y=baYears(e);
+  var c=geomCentre(e), ll=c?c[0].toFixed(6)+','+c[1].toFixed(6):'';
+  var links = c ? '<a href="https://earth.google.com/web/@'+ll+',0a,600d,35y,0h,0t,0r" target="_blank" rel="noopener">Google Earth (use the time slider)</a> · '+
+    '<a href="https://apps.sentinel-hub.com/eo-browser/?zoom=16&lat='+c[0].toFixed(6)+'&lng='+c[1].toFixed(6)+'&datasetId=S2L2A" target="_blank" rel="noopener">Sentinel Hub EO Browser</a>' : '';
+  return '<div class="card"><h2>Before and after (yearly Sentinel-2)</h2><div class="ba">'+
+    '<div><p class="lab">Year before: '+Y.b+'</p><div class="mp" id="mapB"></div></div>'+
+    '<div><p class="lab">Year after: '+Y.a+'</p><div class="mp" id="mapA"></div></div></div>'+
+    '<p class="small">Cloud-free yearly composites ("Sentinel-2 cloudless", EOX), 10 m pixels, so a small patch is only a few pixels wide. '+
+    'Years are one either side of the loss year ('+Y.y+(Y.approx?', approximate: '+(e.rule_dated?'the date is rule-set':'no confirmed date')+', and the Hansen year can be about a year off':'')+').'+
+    (Y.clamp?' <b>The year was moved to the nearest year the mosaics cover.</b>':'')+
+    ' A yearly picture can show whether the forest is gone. It cannot confirm the loss date; the chart above is the date check. The two maps move together. If a map stays grey, that year was not available.</p>'+
+    '<p class="small">Other tools (open in a new tab, need internet): '+links+'</p></div>';
+}
+function geomCentre(e){
+  if (!e.geometry) return null;
+  var polys = e.geometry.type==='Polygon' ? [e.geometry.coordinates] : e.geometry.coordinates, sx=0, sy=0, n=0;
+  polys.forEach(function(p){ p[0].forEach(function(c){ sx+=c[0]; sy+=c[1]; n++; }); });
+  return n?[sy/n,sx/n]:null;
+}
+function wireBA(e){
+  baMaps.forEach(function(m){ try{ m.remove(); }catch(x){} }); baMaps=[];
+  var eb=document.getElementById('mapB'), ea=document.getElementById('mapA'); if(!eb||!ea||!window.L) return;
+  var Y=baYears(e);
+  function mk(el,yr){
+    var m=L.map(el,{zoomControl:true,scrollWheelZoom:false});
+    var tl=L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-'+yr+'_3857/default/g/{z}/{y}/{x}.jpg',
+      {maxZoom:17,maxNativeZoom:14,attribution:'Sentinel-2 cloudless '+yr+' by EOX (contains modified Copernicus Sentinel data '+yr+')'}).addTo(m);
+    var gj=L.geoJSON({type:'Feature',geometry:e.geometry},{style:{color:'#ffd400',weight:2,fill:false}}).addTo(m);
+    return {m:m,gj:gj};
+  }
+  try{
+    var B=mk(eb,Y.b), A=mk(ea,Y.a), busy=false;
+    var c=geomCentre(e);
+    B.m.setView(c,14); A.m.setView(c,14);
+    function link(src,dst){ src.on('move',function(){ if(busy)return; busy=true; dst.setView(src.getCenter(),src.getZoom(),{animate:false}); busy=false; }); }
+    link(B.m,A.m); link(A.m,B.m);
+    baMaps=[B.m,A.m];
+  }catch(x){ eb.innerHTML='<p class="small" style="padding:12px">The maps could not start.</p>'; }
+}
+function mapCard(e){
+  if (!e.geometry) return '';
+  return '<div class="card"><h2>Satellite view</h2><div id="map" role="img" aria-label="Satellite map of the patch"></div>'+
+   '<p class="small">Imagery: Esri World Imagery, loaded live from the internet. It is <b>not</b> from the event date, so a patch may already look cleared or regrown. The yellow outline is the patch. Offline, or if tiles do not load, the footprint below still works.</p></div>';
+}
+function wireMap(e){
+  if (mapObj){ try{ mapObj.remove(); }catch(x){} mapObj=null; }
+  var el=document.getElementById('map'); if(!el || !window.L) return;
+  try{
+    mapObj=L.map(el,{zoomControl:true,attributionControl:true,scrollWheelZoom:false});
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {maxZoom:19,maxNativeZoom:18,attribution:'Tiles &copy; Esri, Maxar, Earthstar Geographics'}).addTo(mapObj);
+    var gj=L.geoJSON({type:'Feature',geometry:e.geometry},{style:{color:'#ffd400',weight:2,fill:false}}).addTo(mapObj);
+    mapObj.fitBounds(gj.getBounds(),{padding:[40,40],maxZoom:18});
+  }catch(x){ el.innerHTML='<p class="small" style="padding:12px">The map could not start.</p>'; }
+}
+function satLink(e){
+  if (!e.geometry) return '';
+  var polys = e.geometry.type==='Polygon' ? [e.geometry.coordinates] : e.geometry.coordinates, sx=0, sy=0, n=0;
+  polys.forEach(function(p){ p[0].forEach(function(c){ sx+=c[0]; sy+=c[1]; n++; }); });
+  if (!n) return '';
+  var u='https://www.google.com/maps/@?api=1&map_action=map&basemap=satellite&zoom=18&center='+(sy/n).toFixed(6)+','+(sx/n).toFixed(6);
+  return '<p class="small"><a href="'+u+'" target="_blank" rel="noopener">Open in Google Maps (satellite)</a> · needs internet. The imagery there is not from the event date, so use it for context only.</p>';
+}
+function mapSvg(e){
+  if (!e.geometry) return '<p class="small">Footprint not loaded. Add <code>event_geometry.geojson</code> and rebuild to see the shape.</p>';
+  var polys = e.geometry.type==='Polygon' ? [e.geometry.coordinates] : e.geometry.coordinates;
+  var pts=[]; polys.forEach(function(p){p.forEach(function(r){r.forEach(function(c){pts.push(c);});});});
+  var xs=pts.map(function(c){return c[0];}), ys=pts.map(function(c){return c[1];});
+  var minx=Math.min.apply(null,xs),maxx=Math.max.apply(null,xs),miny=Math.min.apply(null,ys),maxy=Math.max.apply(null,ys);
+  var lat=(miny+maxy)/2, k=Math.cos(lat*Math.PI/180), w=(maxx-minx)*k, h=(maxy-miny), S=200/Math.max(w,h,1e-9);
+  function P(c){return ((c[0]-minx)*k*S+10).toFixed(1)+','+((maxy-c[1])*S+10).toFixed(1);}
+  var d=polys.map(function(p){return p.map(function(r){return 'M'+r.map(P).join('L')+'Z';}).join('');}).join('');
+  var widthM=(maxx-minx)*111320*k;
+  return '<svg viewBox="0 0 '+(w*S+20)+' '+(h*S+20)+'" role="img" aria-label="Footprint of '+e.id+'" style="max-height:230px"><path d="'+d+'" fill="var(--s1)" stroke="var(--accent)" stroke-width="1.5" fill-rule="evenodd"/></svg>'+
+    '<p class="small">Footprint only, no basemap. About '+Math.round(widthM)+' m across. Check the location in Google Earth before you decide.</p>';
+}
+
+/* ---------- detail ---------- */
+function thin(e){
+  var f=e.features, out=[]; if(!f) return out;
+  if (f.n_obs_s1!=null && f.n_obs_s1<=2) out.push('Stage 1 rests on only '+f.n_obs_s1+' clear observation'+(f.n_obs_s1===1?'':'s')+' in its 60-day window.');
+  if (f.n_obs_s2!=null && f.n_obs_s2<10) out.push('Stage 2 rests on only '+f.n_obs_s2+' clear observations in its 12-month window.');
+  if (f.n_obs_baseline!=null && f.n_obs_baseline<5) out.push('The baseline has only '+f.n_obs_baseline+' clear observations.');
+  if (e.status==='fresh' && e.hand && /LOW CONFIDENCE/.test(e.hand.note||'')) out.push('The date for this event is a low-confidence read. Check it on the chart before you trust the call.');
+  if (f.date_reliability==='candidate') out.push('The date is a candidate figure, not a firm one.');
+  if (f.date_reliability==='visual_estimate') out.push('The date was estimated from imagery, not read from the NBR series.');
+  return out;
+}
+function callCard(e){
+  var c=e.call, t=tagOf(e), h='';
+  h+='<div class="card"><h2>Tool\'s call</h2>';
+  if (e.rule_dated && hasCall(e)) h+='<div class="notice"><b>Rule-dated, not screened, not validated.</b> The dates behind this call were set by the automatic rule, which failed its pre-registered test, and nobody has checked them or confirmed this is real forest loss. A wrong date means a wrong window and a wrong call. Treat this as a prompt to look, not as a result.</div>';
+  if (hasCall(e)){
+    var s1=c.stage1, s2=c.stage2, f=e.features;
+    h+='<div class="round"><div class="k">Round 1<br>60 days after loss</div><div><div class="big">'+nm(s1.label)+'</div>'+
+       '<div class="small">Rule applied as written (3 of 3 tests must pass to call natural). This is not a measured accuracy.</div>'+
+       '<details><summary>Show the three tests</summary><div class="small">'+esc(s1.note)+'</div></details></div></div>';
+    if (s2){
+      h+='<div class="round"><div class="k">Round 2<br>12 months after loss</div><div><div class="big">Leans '+nm(s2.label).toLowerCase()+'</div>'+
+         '<div class="small">Probability of permanent encroachment '+fmt(s2.p_permanent)+' · confidence band: '+esc(s2.confidence)+' (the bands are a fixed rule, not measured reliability).</div>'+
+         '<div class="small">Basis: '+esc(s2.basis)+'.</div></div></div>';
+    } else {
+      h+='<div class="round"><div class="k">Round 2</div><div class="small">Not run. Round 1 called this natural, and round 2 only looks at human-driven events.</div></div>';
+    }
+    h+='<p class="small">Uncertain is a valid answer. The tool never says uncertain by itself, so that call is yours to make.</p>';
+  } else if (pending(e)){
+    h+='<div class="notice">Features for this event have not been extracted yet, so there is no call. The dates are set; run <code>feature_extraction_fresh.js</code> and rebuild.</div>';
+  } else if (e.status==='maduroad_new') {
+    h+='<div class="notice">No call. '+(e.screening==='screened_not_confirmed'
+      ? 'This patch was looked at earlier and was not confirmed as real forest loss (a false positive or too uncertain to use).'
+      : 'Nobody has screened this patch, so it may not be real forest loss.')+
+      ' No dates or features have been set, so the tool cannot place its evidence windows. The chart and the rule\'s guess are shown so you can judge it. Your review is the screening step.</div>';
+    if (e.s1_only){ var q=e.s1_only;
+      h+='<div class="round"><div class="k">Round 1 only<br>(screen)</div><div><div class="big">'+nm(q.label)+'</div>'+
+        '<div class="small">Rule applied to shape, slope and distance to earlier loss. No dates were used, so this is <b>not</b> the 60-day Round 1 and there is no Round 2. Distance to earlier loss uses the Hansen year, which can be about a year off. Thresholds were set on 29 other events; accuracy on this patch was never measured.'+
+        (q.label==='candidate_human'?' Every Maduroad patch passes to this label because slope never exceeds the natural threshold here, so it does not separate patches.':'')+'</div>'+
+        '<details><summary>Show the three tests</summary><div class="small">'+esc(q.note)+'</div></details></div></div>'; }
+  } else {
+    h+='<div class="notice">No call. The loss date could not be pinned from the satellite series, so the evidence windows cannot be placed and the tool declines to guess.</div>';
+  }
+  h+='<p class="small"><b>'+esc(t.n)+'.</b> '+(e.status==='evaluated'?
+    'This is one of the 29 events used to check the method. Its Stage 2 call is leave-one-out, so the model never saw this event. Stage 1\'s thresholds were set on these same events, so treat Stage 1 here as a description, not a test.':
+    (e.status==='fresh'?'No human reference label exists for this event. Do not read the call as accuracy.':(e.status==='maduroad_new'?'It is part of the full Maduroad list. Accuracy was never measured on it.':''))) +'</p></div>';
+  return h;
+}
+function datesCard(e){
+  var h='<div class="card"><h2>Dates</h2><table>';
+  if (e.hand && e.hand.status==='dated')
+    h+='<tr><th>Date used</th><td>Last forest observation '+e.hand.t_forest+' → first loss observation '+e.hand.t_loss+' ('+(day(e.hand.t_loss)-day(e.hand.t_forest))+' days)<div class="small">'+esc(e.hand.source)+'</div></td></tr>';
+  else h+='<tr><th>Date used</th><td>None. '+esc((e.hand&&e.hand.note)||'')+'</td></tr>';
+  var r=e.rule;
+  h+='<tr><th>Rule\'s guess</th><td>'+(r.t_loss?('Last forest '+(r.t_forest||'?')+' → loss '+r.t_loss+(r.status==='wide'?' (interval wider than 60 days)':'')):'The rule found no drop')+
+     ' <span class="badge warn">unverified</span><div class="small">The rule agreed with a hand date within 30 days on 6 of 8 test events. It also gave a confident interval on all 4 events a person could not date. Do not rely on it.</div></td></tr>';
+  h+='<tr><th>Hansen year</th><td>'+e.hansen_year+' <span class="small">(a hint, never the loss date)</span></td></tr></table></div>';
+  return h;
+}
+function evidenceCard(e){
+  var f=e.features; if(!f) return '';
+  var w=thin(e), h='<div class="card"><h2>Evidence behind the call</h2>';
+  if (w.length) h+=w.map(function(x){return '<div class="notice">'+esc(x)+'</div>';}).join('');
+  h+='<table style="margin-top:8px"><tr><th>Area</th><td>'+fmt(f.area_ha,2)+' ha</td><th>Compactness</th><td>'+fmt(f.shape_compactness)+'</td></tr>'+
+     '<tr><th>Slope</th><td>'+fmt(f.slope_deg,1)+'°</td><th>Distance to earlier loss</th><td>'+fmt(f.dist_to_prior_loss_m,0)+' m</td></tr>'+
+     '<tr><th>Clear obs: baseline</th><td>'+f.n_obs_baseline+'</td><th>Clear obs: Stage 1 / Stage 2</th><td>'+f.n_obs_s1+' / '+f.n_obs_s2+'</td></tr>'+
+     '<tr><th>NBR trend after loss</th><td>'+fmt(f.trend_nbr_per_day*365,2)+' per year</td><th>Wobble / cycles</th><td>'+fmt(f.wobble_std,3)+' / '+f.cycle_count_provisional+'</td></tr></table>'+
+     '<p class="small">Observation counts may include repeats where two satellite tiles overlap. Warnings use a fixed display rule, not a validated threshold.</p></div>';
+  return h;
+}
+function reviewCard(e){
+  var rv=reviews[e.id]||{}, h='<div class="card"><h2>Your review</h2>';
+  var hasDates = e.hand && e.hand.status==='dated';
+  if (hasDates) h+='<div class="small">1. Do the dates look right on the chart?</div><div class="actions" id="dateAct">'+
+    ['right','wrong','unsure'].map(function(k){return '<button class="act" data-d="'+k+'" aria-pressed="'+(rv.date_check===k)+'">'+({right:'Dates look right',wrong:'Dates look wrong',unsure:'Cannot tell'})[k]+'</button>';}).join('')+'</div>';
+  h+='<div class="small">'+(hasDates?'2. ':'')+'What is your call?'+(hasDates?'':' Is this real forest loss, and if so what drove it?')+'</div><div class="actions" id="callAct">'+
+    (hasCall(e)?'<button class="act" data-c="agree" aria-pressed="'+(rv.decision==='agree')+'">Agree with the tool</button>':'')+
+    '<button class="act" data-c="override" aria-pressed="'+(rv.decision==='override')+'">Override</button>'+
+    '<button class="act" data-c="uncertain" aria-pressed="'+(rv.decision==='uncertain')+'">Mark uncertain</button></div>';
+  h+='<div id="ovr" style="display:'+(rv.decision==='override'?'block':'none')+'"><select id="ovrSel" aria-label="Your label">'+
+    ['cultivation','permanent_encroachment','natural','logging','other','not forest loss'].map(function(k){return '<option'+(rv.label===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>';
+  h+='<textarea id="note" rows="2" placeholder="Why? (optional)" style="margin-top:8px">'+esc(rv.note||'')+'</textarea>';
+  h+='<div class="actions"><button class="act primary" id="save">Save review</button><button class="act" id="clear">Clear</button><span class="small" id="saved">'+(rv.at?('Saved '+rv.at+' UTC'):'')+'</span></div></div>';
+  return h;
+}
+function limitsCard(){
+  return '<details class="card"><summary><b>What this tool cannot tell you</b></summary><ul class="small">'+
+   '<li>It suggests a driver. It does not prove who did it or whether it was lawful.</li>'+
+   '<li>Accuracy was measured only on the 29 evaluated events, and only for the cultivation-versus-permanent step. Every other call is model output, not evaluated.</li>'+
+   '<li>Only one confirmed natural event exists in the labelled set, so a natural call is untested.</li>'+
+   '<li>Some patches may not be real forest loss. Your review is the screening step.</li>'+
+   '<li>Dates were set by a person reading the chart. The one exception is 83 Maduroad patches marked rule-dated, whose dates came from an automatic rule that is not reliable enough to trust.</li>'+
+   '<li>If dates change, the call here does not update. Flag the date and treat the call as stale.</li>'+
+   '<li>This is a retrospective review. It is not a real-time alert system.</li></ul></details>';
+}
+function keyCard(e){
+  if (!state.key || !e.ref_label) return '';
+  return '<div class="card"><h2>Reference label (answer key)</h2><div class="big">'+esc(e.ref_label)+'</div><p class="small">Set by the researcher\'s labelling protocol. Shown for evaluation only.</p></div>';
+}
+function renderDetail(){
+  var e=EV.filter(function(x){return x.id===state.sel;})[0], el=document.getElementById('detail');
+  if (!e){ el.innerHTML='<div class="card"><h2>Start here</h2><p>Pick an event from the list. Each one shows the tool\'s call, the satellite evidence behind it, and the dates it used. Then record whether you agree.</p><p class="small">'+META.n_with_call+' of '+META.n_events+' events currently have a call. Events with no call are shown on purpose, with the reason.</p></div>'; return; }
+  var t=tagOf(e);
+  var h='<div class="card"><div class="title"><h2>'+e.id+'</h2><span>'+esc(e.site)+' · loss year '+e.hansen_year+(e.features?' · '+fmt(e.features.area_ha,1)+' ha':'')+'</span><span class="badge '+(e.status==='evaluated'?'':'warn')+'">'+esc(t.t)+'</span></div></div>';
+  h+=callCard(e)+keyCard(e);
+  h+='<div class="card"><h2>Satellite evidence over time</h2>'+chart(e)+
+     '<p class="small">Each dot is one clear Sentinel-2 observation (NBR; high is healthy forest, low is cleared ground).'+(e.windows?' Shaded bands are the windows the call is allowed to use. Nothing after the Stage 2 window enters the call.':' No windows are drawn because no date has been set for this patch.')+'</p></div>';
+  h+=mapCard(e)+baCard(e)+'<div class="grid2">'+datesCard(e)+'<div class="card"><h2>Footprint</h2>'+mapSvg(e)+satLink(e)+'</div></div>';
+  h+=evidenceCard(e)+reviewCard(e)+limitsCard();
+  el.innerHTML=h; wireReview(e); wireMap(e); wireBA(e);
+}
+function wireReview(e){
+  var rv=reviews[e.id]||{}, cur={date_check:rv.date_check||'', decision:rv.decision||'', label:rv.label||''};
+  var da=document.getElementById('dateAct'); if (da) da.onclick=function(ev){ var b=ev.target.closest('button'); if(!b)return; cur.date_check=b.dataset.d;
+    [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b);}); };
+  document.getElementById('callAct').onclick=function(ev){ var b=ev.target.closest('button'); if(!b)return; cur.decision=b.dataset.c;
+    [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b);});
+    document.getElementById('ovr').style.display = cur.decision==='override'?'block':'none'; };
+  document.getElementById('save').onclick=function(){
+    if(!cur.decision){ document.getElementById('saved').textContent='Choose agree, override or uncertain first.'; return; }
+    var tool = hasCall(e) ? (e.call.stage2? e.call.stage2.label : e.call.stage1.label) : 'no call';
+    reviews[e.id]={date_check:cur.date_check, decision:cur.decision,
+      label: cur.decision==='override'? document.getElementById('ovrSel').value : (cur.decision==='uncertain'?'uncertain':(cur.decision==='agree'?tool:'')),
+      note: document.getElementById('note').value, tool_call: tool, status: tagOf(e).t, at: new Date().toISOString().slice(0,16).replace('T',' ')};
+    saveLS(); document.getElementById('saved').textContent='Saved '+reviews[e.id].at+' UTC'; renderList();
+  };
+  document.getElementById('clear').onclick=function(){ delete reviews[e.id]; saveLS(); renderList(); renderDetail(); };
+}
+function csvCell(x){ x=String(x==null?'':x); return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x; }
+document.getElementById('btnExport').onclick=function(){
+  var cols=['event_id','site','status_tag','tool_call','analyst_decision','analyst_label','date_check','note','saved_at'];
+  var rows=[cols.join(',')];
+  EV.forEach(function(e){ var r=reviews[e.id]; if(!r) return;
+    rows.push([e.id,e.site,r.status,r.tool_call,r.decision,r.label,r.date_check,r.note,r.at].map(csvCell).join(',')); });
+  var blob=new Blob([rows.join('\n')+'\n'],{type:'text/csv'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='workbench_reviews.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById('list').onclick=function(ev){ var b=ev.target.closest('.row'); if(!b)return; state.sel=b.dataset.id; renderList(); renderDetail(); };
+document.getElementById('siteSel').onchange=function(){ state.site=this.value; renderList(); };
+document.getElementById('q').oninput=function(){ state.q=this.value; renderList(); };
+document.getElementById('chipsStatus').onclick=function(ev){ var b=ev.target.closest('.chip'); if(!b)return; state.f=b.dataset.f;
+  [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b);}); renderList(); };
+document.getElementById('chipsRev').onclick=function(ev){ var b=ev.target.closest('.chip'); if(!b)return; state.r=b.dataset.r;
+  [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b);}); renderList(); };
+document.getElementById('chipsCall').onclick=function(ev){ var b=ev.target.closest('.chip'); if(!b)return; state.c=b.dataset.c;
+  [].forEach.call(this.children,function(x){x.setAttribute('aria-pressed',x===b);}); renderList(); };
+document.getElementById('stamp').textContent='Build '+META.built+' · '+META.n_events+' events · '+META.n_with_call+' with a call';
+document.getElementById('tglKey').onchange=function(){ state.key=this.checked; renderDetail(); };
+renderList(); renderDetail();
+})();
+</script>
+</body>
+</html>

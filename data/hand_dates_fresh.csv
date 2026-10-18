@@ -1,0 +1,13 @@
+event_id,hand_status,t_forest,t_loss,notes
+REF_059,dated,2019-06-30,2019-08-24,"CLAUDE FIRST PASS - researcher to verify. Sharp step. 2019-07-25 (0.36) treated as partial dip not loss. Series starts Jan 2019 so baseline is 6 months."
+REF_060,dated,2023-08-15,2023-08-25,"CLAUDE FIRST PASS. Gradual slide Jun-Aug then step to -0.29. Fast recovery to 0.54 by Dec (crop-like?). t_forest borderline: 0.38 is inside the Feb-Apr seasonal range."
+REF_061,dated,2022-01-20,2022-03-06,"CLAUDE FIRST PASS - LOW CONFIDENCE. Very noisy Jan-Feb. Repeated drop-recover cycles through 2022. First sustained drop read as Mar 2022."
+REF_062,dated,2019-04-03,2019-04-13,"CLAUDE FIRST PASS. Low baseline (0.3-0.4) and only ~3 months before the drop. 2019-04-08 (0.22) is partial. Recovers from Sep 2019."
+REF_063,dated,2023-06-26,2023-07-16,"CLAUDE FIRST PASS. Clear step. Recovers to 0.42 by Nov 2023 (fast)."
+REF_064,undateable,,,"CLAUDE FIRST PASS. Gradual decline Jan-Mar 2024 with no step. Only ~2 months of baseline."
+REF_065,undateable,,,"CLAUDE FIRST PASS. Very noisy; baseline itself swings 0.2-0.5. Cannot separate drop from noise."
+REF_066,undateable,,,"CLAUDE FIRST PASS. Two slow declines (Feb-Apr and Sep-Nov 2024) with recovery between. No clear step; which episode is the Hansen loss is unclear."
+REF_067,dated,2023-06-16,2023-08-05,"CLAUDE FIRST PASS. Data gap 06-16 to 08-05 (50 d). Clear sustained drop afterwards."
+REF_068,dated,2024-07-20,2024-08-04,"CLAUDE FIRST PASS - LOW CONFIDENCE. Gradual Jul-Aug slide; 2024-07-25 (0.36) is intermediate. Unstable series in late 2023."
+REF_069,dated,2022-05-17,2022-05-27,"CLAUDE FIRST PASS. Transient dip in Mar 2022 recovered by 04-27; sustained drop from late May."
+REF_070,undateable,,,"CLAUDE FIRST PASS. Gradual slide 0.45 to 0.25 over Feb-Mar 2019, low afterwards. Only ~1 month of baseline. No step."
